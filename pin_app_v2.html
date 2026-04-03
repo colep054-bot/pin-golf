@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pin. — Members Only Golf</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#f5f2ed; --bg2:#ffffff; --bg3:#eeeae3; --bg4:#e8f5ee;
+  --border:#e0dbd2; --border2:#b8ddc4;
+  --green:#1a7a3c; --lg:#1a7a3c;
+  --gold:#c49a1a; --red:#c0392b;
+  --ink:#1a1a18; --dim:#4a5a4e; --muted:#7a8c7e;
+  --navy:#1a2060;
+  --nav-h:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:430px;margin:0 auto;background:var(--bg);}
+
+/* ── AUTH ── */
+#auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;}
+.auth-logo{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.auth-logo span{color:var(--green);}
+.auth-tag{font-size:13px;color:var(--muted);margin-bottom:40px;letter-spacing:.02em;}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:360px;}
+.auth-tabs{display:flex;gap:0;margin-bottom:20px;background:var(--bg3);border-radius:8px;padding:3px;}
+.auth-tab{flex:1;padding:8px;font-size:13px;font-weight:500;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--muted);transition:all .15s;}
+.auth-tab.active{background:var(--bg2);color:var(--ink);}
+.field{margin-bottom:14px;}
+.field label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:block;margin-bottom:5px;}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--ink);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;}
+.field input:focus{border-color:var(--green);}
+.btn-green{width:100%;background:var(--green);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;margin-top:4px;}
+.btn-green:hover{opacity:.88;}
+.btn-green:disabled{opacity:.5;cursor:not-allowed;}
+.auth-error{font-size:12px;color:var(--red);margin-top:10px;text-align:center;min-height:18px;}
+.invite-note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.5;}
+.invite-note span{color:var(--green);font-weight:500;}
+
+/* ── LAYOUT ── */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;background:var(--bg);border-bottom:1px solid var(--border);}
+.appname{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);}
+.appname span{color:var(--green);}
+.screen{display:none;flex-direction:column;flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h)+12px);}
+.screen.active{display:flex;}
+.bottom-nav{display:flex;justify-content:space-around;align-items:center;background:var(--bg2);border-top:1px solid var(--border);height:var(--nav-h);padding:0 10px;}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:var(--muted);cursor:pointer;padding:8px 14px;border:none;background:none;transition:color .15s;}
+.nav-btn.active,.nav-btn:hover{color:var(--green);}
+.nav-btn svg{width:20px;height:20px;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:6px 14px;}
+.sec-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:14px 18px 6px;}
+
+/* ── FEED ── */
+.post-header{display:flex;align-items:center;gap:10px;padding:11px 13px 7px;}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;background:#d4edd9;color:var(--green);}
+.post-meta{flex:1;}
+.post-user{font-size:13px;font-weight:500;color:var(--ink);}
+.post-course{font-size:10px;color:var(--muted);margin-top:1px;}
+.score-chip{background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:4px 9px;text-align:center;}
+.score-chip .num{font-size:16px;font-weight:500;color:var(--green);line-height:1;}
+.score-chip .lbl{font-size:8px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;}
+.post-img{height:150px;background:var(--bg3);position:relative;overflow:hidden;}
+.post-img img{width:100%;height:100%;object-fit:cover;}
+.post-img svg{width:100%;height:100%;}
+.hole-label{position:absolute;bottom:8px;left:12px;font-size:10px;color:#fff;background:#00000055;padding:2px 6px;border-radius:4px;}
+.scorestrip{display:flex;gap:3px;padding:7px 13px;}
+.hc{flex:1;border-radius:5px;padding:3px 2px;text-align:center;}
+.hc.def{background:var(--bg4);}
+.hc.bir{background:var(--green);}
+.hc.eag{background:var(--gold);}
+.hc.bog{background:#faeaea;}
+.hc .hn{font-size:7px;color:var(--muted);}
+.hc.bir .hn,.hc.eag .hn{color:#fff;}
+.hc .hs{font-size:11px;font-weight:500;color:var(--ink);}
+.hc.bir .hs,.hc.eag .hs{color:#fff;}
+.post-cap{padding:2px 13px 9px;font-size:12px;color:var(--dim);line-height:1.5;}
+.post-cap strong{color:var(--ink);font-weight:500;}
+.post-actions{display:flex;align-items:center;gap:14px;padding:6px 13px 11px;border-top:1px solid var(--border);}
+.act-btn{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer;background:none;border:none;transition:color .15s;font-family:'DM Sans',sans-serif;}
+.act-btn:hover,.act-btn.pinned{color:var(--green);}
+.act-btn svg{width:14px;height:14px;}
+
+/* ── LOG ── */
+.form-group{padding:10px 18px;}
+.form-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;}
+.form-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-size:13px;color:var(--ink);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;}
+.form-input:focus{border-color:var(--green);}
+.form-input::placeholder{color:var(--muted);}
+.course-result{background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;margin-top:4px;cursor:pointer;transition:background .15s;}
+.course-result:hover{background:var(--bg4);}
+.cr-name{font-size:13px;color:var(--ink);font-weight:500;}
+.cr-loc{font-size:10px;color:var(--muted);margin-top:2px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);transition:background .2s;}
+.step-dot.active{background:var(--green);}
+.step-screen{display:none;}
+.step-screen.active{display:block;}
+.score-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;padding:0 18px 8px;}
+.hole-cell{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 2px;text-align:center;cursor:pointer;transition:all .15s;}
+.hole-cell .hl{font-size:8px;color:var(--muted);}
+.hole-cell .hv{font-size:13px;font-weight:500;color:var(--ink);}
+.hole-cell.birdie{background:var(--green);border-color:var(--green);}
+.hole-cell.birdie .hl,.hole-cell.birdie .hv{color:#fff;}
+.hole-cell.eagle{background:var(--gold);border-color:var(--gold);}
+.hole-cell.eagle .hl,.hole-cell.eagle .hv{color:#fff;}
+.hole-cell.bogey{background:#faeaea;border-color:#e0b0b0;}
+.hole-cell.bogey .hv{color:var(--red);}
+.hole-cell.double{background:#f5d8d8;border-color:#d09090;}
+.hole-cell.double .hv{color:#a02020;}
+.total-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:var(--bg2);margin:0 14px;border-radius:10px;border:1px solid var(--border);}
+.total-num{font-size:22px;font-weight:500;color:var(--green);}
+.btn-primary{width:calc(100% - 36px);margin:14px 18px;background:var(--green);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;}
+.btn-primary:hover{opacity:.88;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-sec{width:calc(100% - 36px);margin:0 18px 12px;background:var(--bg2);color:var(--green);border:1px solid var(--border2);border-radius:10px;padding:11px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.tee-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;}
+.tee-cell{height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--muted);transition:all .15s;}
+.tee-cell.done{background:var(--green);border-color:var(--green);color:#fff;}
+.tee-cell.prev{background:#b8ddc4;border-color:#b8ddc4;color:#fff;cursor:default;}
+
+/* ── POST SUCCESS ── */
+.post-success{display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;}
+.post-success.show{display:flex;}
+.big-icon{width:64px;height:64px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.post-success h2{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px;}
+.post-success p{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ── LEADERBOARD ── */
+.lb-tabs{display:flex;gap:6px;padding:10px 16px 12px;}
+.lb-tab{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);cursor:pointer;background:none;transition:all .15s;}
+.lb-tab.active{background:var(--green);color:#fff;border-color:var(--green);font-weight:500;}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--border);}
+.lb-row.you{background:var(--bg4);border-radius:9px;margin:0 10px;border:1px solid var(--border2);}
+.lb-rank{font-size:13px;font-weight:500;width:18px;text-align:center;flex-shrink:0;}
+.lb-info{flex:1;}
+.lb-name{font-size:12px;font-weight:500;color:var(--ink);}
+.lb-detail{font-size:10px;color:var(--muted);margin-top:1px;}
+.lb-stat{text-align:right;}
+.lb-stat .n{font-size:16px;font-weight:500;color:var(--green);}
+.lb-stat .l{font-size:8px;color:var(--green);text-transform:uppercase;letter-spacing:.04em;}
+
+/* ── PASSPORT ── */
+.pp-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:8px;}
+.st{height:22px;border-radius:3px;background:#e8e4dc;display:flex;align-items:center;justify-content:center;font-size:7px;color:#8aaa8e;font-weight:500;}
+.st.pl{background:var(--green);color:#fff;}
+.st.hm{background:var(--gold);color:#fff;}
+
+/* ── PROFILE ── */
+.prof-av{width:60px;height:60px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;color:var(--green);margin-bottom:10px;border:2px solid var(--border2);}
+.stat-cell{background:var(--bg2);border-radius:10px;border:1px solid var(--border);padding:10px 12px;}
+.stat-n{font-size:22px;font-weight:500;color:var(--green);line-height:1;}
+.stat-l{font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;}
+.stat-ctx{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.4;}
+.bdg{background:var(--bg4);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:10px;color:var(--green);}
+.bdg.gold{background:#f5ecd8;border-color:var(--gold);color:#8a6a0a;}
+
+/* ── LOADING ── */
+.loader{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);font-size:13px;gap:10px;}
+.spin{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:20px;font-size:12px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* ── LOG ROUND BTN ── */
+.log-btn{display:flex;align-items:center;gap:6px;background:var(--green);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s;}
+.log-btn:hover{opacity:.88;}
+</style>
+</head>
+<body>
+<div class="app" id="app" style="display:none;">
+
+  <!-- TOP BAR -->
+  <div class="topbar" id="main-topbar">
+    <div class="appname">Pin<span>.</span></div>
+    <button class="log-btn" onclick="showScreen('log')">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#fff" stroke-width="1.2"/><path d="M6.5 4v5M4 6.5h5" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Log round
+    </button>
+  </div>
+
+  <!-- FEED -->
+  <div class="screen active" id="screen-feed">
+    <div id="feed-list"><div class="loader"><div class="spin"></div>Loading feed...</div></div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="screen" id="screen-leaderboard">
+    <div style="padding:16px 18px 8px;">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;">Leaderboard</div>
+      <div style="font-size:10px;color:var(--green);margin-top:2px;text-transform:uppercase;letter-spacing:.08em;" id="lb-region">Loading...</div>
+    </div>
+    <div class="lb-tabs">
+      <button class="lb-tab active" onclick="setLbTab(this,'courses')">Courses played</button>
+      <button class="lb-tab" onclick="setLbTab(this,'rounds')">Rounds logged</button>
+      <button class="lb-tab" onclick="setLbTab(this,'avg')">Scoring avg</button>
+    </div>
+    <div id="lb-list"><div class="loader"><div class="spin"></div>Loading...</div></div>
+
+    <!-- PASSPORT -->
+    <div style="margin:10px 14px 16px;">
+      <div style="background:var(--navy);border-radius:16px;overflow:hidden;position:relative;padding:18px 18px 0;">
+        <div style="position:relative;z-index:2;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div style="font-size:12px;font-weight:500;color:#fff;letter-spacing:.12em;text-transform:uppercase;">Pin. Golf Passport</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#ffffff18;display:flex;align-items:center;justify-content:center;">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7L7 3v2.5C4 5.5 2 7.5 2 11c1.3-2.2 3.5-2.8 5-2.8V10.5L11 7z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div style="font-size:8px;color:#8899cc;letter-spacing:.18em;text-transform:uppercase;margin-bottom:16px;">Passport · Pass · Pasaporte</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+            <div>
+              <div style="font-size:9px;color:#8899cc;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;">Courses</div>
+              <div style="font-size:34px;font-weight:500;color:#fff;line-height:1;" id="pp-courses">—</div>
+              <div style="font-size:10px;color:#6677aa;margin-top:3px;" id="pp-states">Loading...</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:#8899cc;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;">Total shots</div>
+              <div style="font-size:34px;font-weight:500;color:#fff;line-height:1;" id="pp-shots">—</div>
+              <div style="font-size:10px;color:#6677aa;margin-top:3px;" id="pp-rounds-lbl">rounds logged</div>
+            </div>
+          </div>
+          <div style="margin:0 -18px;background:#ffffff12;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="togglePassport()">
+            <span style="font-size:12px;font-weight:500;color:#fff;">States played</span>
+            <svg id="pp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" style="transition:transform .2s;"><path d="M6 4l4 4-4 4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+      </div>
+      <div id="passport-expanded" style="display:none;background:#1e2468;border-radius:0 0 16px 16px;padding:14px 16px 16px;border:1px solid #2a3488;border-top:none;">
+        <div style="font-size:9px;color:#8899cc;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;">States played</div>
+        <div class="pp-grid" id="passport-grid"></div>
+        <div id="pp-count" style="color:#8899cc;margin-top:8px;font-size:10px;text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG ROUND -->
+  <div class="screen" id="screen-log">
+    <div id="log-main">
+      <div style="padding:14px 18px 4px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;">Log a round</div>
+        <div style="font-size:11px;color:var(--green);" id="step-label">Step 1 of 3</div>
+      </div>
+      <div style="display:flex;gap:6px;padding:8px 18px 4px;" id="step-dots">
+        <div class="step-dot active" id="sd0"></div>
+        <div class="step-dot" id="sd1"></div>
+        <div class="step-dot" id="sd2"></div>
+      </div>
+
+      <!-- Step 1: Course -->
+      <div class="step-screen active" id="step-0">
+        <div class="form-group">
+          <div class="form-label">Find your course</div>
+          <input class="form-input" id="course-search" placeholder="Search course name or city..." oninput="searchCourses(this.value)">
+          <div id="course-results" style="margin-top:4px;"></div>
+          <div id="selected-course" style="display:none;" class="course-result" style="border-color:var(--green);">
+            <div class="cr-name" id="sc-name"></div>
+            <div class="cr-loc" id="sc-loc"></div>
+          </div>
+        </div>
+        <div id="course-history-card" style="display:none;margin:0 18px 10px;">
+          <div style="background:var(--navy);border-radius:12px;padding:14px 16px;">
+            <div style="font-size:9px;color:#8899cc;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;">Your history here</div>
+            <div style="display:flex;justify-content:space-between;">
+              <div><div style="font-size:9px;color:#8899cc;text-transform:uppercase;margin-bottom:2px;">Best score</div><div style="font-size:28px;font-weight:500;color:#fff;" id="ch-best">—</div></div>
+              <div><div style="font-size:9px;color:#8899cc;text-transform:uppercase;margin-bottom:2px;">Visits</div><div style="font-size:28px;font-weight:500;color:#fff;" id="ch-visits">—</div></div>
+              <div><div style="font-size:9px;color:#8899cc;text-transform:uppercase;margin-bottom:2px;">Status</div><div style="font-size:14px;font-weight:500;color:#fff;margin-top:6px;" id="ch-status">—</div></div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="nextStep(1)" id="step0-next" disabled>Continue</button>
+      </div>
+
+      <!-- Step 2: Scorecard -->
+      <div class="step-screen" id="step-1">
+        <div class="form-group"><div class="form-label" id="sc-label">Scorecard — tap holes to cycle score</div></div>
+        <div class="score-grid" id="score-grid"></div>
+        <div style="display:flex;gap:8px;padding:4px 18px 8px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);"><div style="width:10px;height:10px;border-radius:3px;background:var(--gold);"></div>Eagle</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);"><div style="width:10px;height:10px;border-radius:3px;background:var(--green);"></div>Birdie</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);"><div style="width:10px;height:10px;border-radius:3px;background:var(--bg4);border:1px solid var(--border2);"></div>Par</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);"><div style="width:10px;height:10px;border-radius:3px;background:#faeaea;border:1px solid #e0b0b0;"></div>Bogey+</div>
+        </div>
+        <div class="total-bar">
+          <span style="font-size:11px;color:var(--muted);">Total</span>
+          <span class="total-num" id="total-display">72</span>
+          <span style="font-size:11px;color:var(--muted);" id="vs-display">E (par)</span>
+        </div>
+        <button class="btn-primary" onclick="nextStep(2)" style="margin-top:12px;">Continue</button>
+        <button class="btn-sec" onclick="nextStep(0)">Back</button>
+      </div>
+
+      <!-- Step 3: Photos + Caption + Tee boxes -->
+      <div class="step-screen" id="step-2">
+        <div class="form-group">
+          <div class="form-label">Caption (optional)</div>
+          <textarea class="form-input" id="caption-input" rows="3" placeholder="What was memorable about this round..."></textarea>
+        </div>
+        <div class="form-group" style="padding-top:2px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div class="form-label" style="margin:0;">Tee box challenge</div>
+            <div style="font-size:9px;background:var(--bg4);color:var(--green);border:1px solid var(--border2);border-radius:20px;padding:2px 8px;" id="tee-count-badge">0 / 18</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:8px;">Tap holes you photographed from the tee. Complete all 18 to earn <strong style="color:var(--green);">Course Photographer</strong>.</div>
+            <div class="tee-grid" id="tee-grid"></div>
+          </div>
+        </div>
+        <button class="btn-primary" id="post-btn" onclick="submitRound()">Post round</button>
+        <button class="btn-sec" onclick="nextStep(1)">Back</button>
+      </div>
+    </div>
+
+    <!-- Success -->
+    <div class="post-success" id="post-success">
+      <div class="big-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14l5.5 5.5L22 8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>Round posted!</h2>
+      <p style="margin-bottom:20px;">Logged and shared with your crew.</p>
+      <div id="round-summary" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;width:100%;text-align:left;margin-bottom:20px;"></div>
+      <button class="btn-primary" style="margin:0;width:100%;" onclick="goFeed()">Back to feed</button>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="screen-profile">
+    <div style="padding:18px 18px 10px;">
+      <div class="prof-av" id="prof-av">??</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;" id="prof-name">Loading...</div>
+      <div style="font-size:11px;color:var(--green);margin-top:3px;" id="prof-hcap"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;" id="prof-invite"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 14px;" id="stats-grid">
+      <div class="stat-cell"><div class="stat-n" id="ps-courses">—</div><div class="stat-l">Courses</div></div>
+      <div class="stat-cell"><div class="stat-n" id="ps-rounds">—</div><div class="stat-l">Rounds</div></div>
+      <div class="stat-cell"><div class="stat-n" id="ps-shots">—</div><div class="stat-l">Total shots</div></div>
+      <div class="stat-cell"><div class="stat-n" id="ps-avg">—</div><div class="stat-l">Scoring avg</div></div>
+    </div>
+    <div style="padding:4px 18px 12px;">
+      <div class="sec-title" style="padding:8px 0 6px;">Badges</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="badge-shelf"></div>
+    </div>
+    <div style="padding:8px 18px;">
+      <button onclick="signOut()" style="width:100%;background:none;border:1px solid var(--border);border-radius:10px;padding:11px;font-size:13px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-feed" onclick="showScreen('feed')">
+      <svg viewBox="0 0 20 20" fill="none"><rect x="1.5" y="1.5" width="6.5" height="6.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="12" y="1.5" width="6.5" height="6.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="12" width="6.5" height="6.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="12" y="12" width="6.5" height="6.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+      Feed
+    </button>
+    <button class="nav-btn" id="nav-leaderboard" onclick="showScreen('leaderboard')">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M10 2l2 5 5.5.8-4 3.8 1 5.4L10 14.5l-4.5 2.5 1-5.4-4-3.8L8 7z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      Ranks
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="showScreen('profile')">
+      <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.3"/><path d="M3 18c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Profile
+    </button>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-logo">Pin<span>.</span></div>
+  <div class="auth-tag">The invite-only golf social app</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="setAuthTab('login')">Sign in</button>
+      <button class="auth-tab" onclick="setAuthTab('signup')">Join</button>
+    </div>
+    <div id="login-form">
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="btn-green" id="login-btn" onclick="signIn()">Sign in</button>
+    </div>
+    <div id="signup-form" style="display:none;">
+      <div class="field"><label>Name</label><input type="text" id="signup-name" placeholder="Your name"></div>
+      <div class="field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="signup-password" placeholder="Min 6 characters"></div>
+      <div class="field"><label>Invite code</label><input type="text" id="signup-invite" placeholder="Enter your invite code" style="text-transform:uppercase;"></div>
+      <button class="btn-green" id="signup-btn" onclick="signUp()">Request access</button>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="invite-note">Pin. is invite-only. Ask a member for a code.<br>Founding member code: <span>PINDEMO</span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://mkgdevlrsthzifzoshhp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZ2Rldmxyc3Roemlmem9zaGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNzM5NDAsImV4cCI6MjA5MDc0OTk0MH0.Zg1MEE_dm5j-DqojU5KCHuGERU_htljc-t7gGjXOAzA';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const VALID_INVITE_CODES = ['PINDEMO','PINLAUNCH','GOLF2025','BIRDIE','EAGLECLUB'];
+
+const COURSES = [
+  {name:"Pebble Beach Golf Links",loc:"Pebble Beach, CA",par:72,holes:[4,5,4,4,3,5,3,4,4,4,4,3,5,4,5,3,4,5]},
+  {name:"Augusta National Golf Club",loc:"Augusta, GA",par:72,holes:[4,5,4,3,4,3,4,5,4,4,4,3,5,4,5,3,4,4]},
+  {name:"Bandon Dunes Golf Resort",loc:"Bandon, OR",par:72,holes:[4,4,4,5,3,4,3,4,5,4,4,3,4,5,3,4,5,4]},
+  {name:"Pinehurst No. 2",loc:"Pinehurst, NC",par:70,holes:[4,4,4,4,3,5,4,3,4,4,4,4,3,4,5,3,4,4]},
+  {name:"TPC Sawgrass",loc:"Ponte Vedra Beach, FL",par:72,holes:[4,5,3,4,4,4,5,3,4,4,4,3,5,4,4,3,4,5]},
+  {name:"Bethpage Black",loc:"Farmingdale, NY",par:71,holes:[4,4,3,5,4,4,3,4,4,4,4,4,5,3,4,3,4,5]},
+  {name:"Quarry Oaks Golf Club",loc:"Ashland, NE",par:72,holes:[4,4,3,5,4,4,5,3,4,4,3,4,5,4,4,3,5,4]},
+  {name:"Firethorn Golf Club",loc:"Lincoln, NE",par:72,holes:[4,5,3,4,4,4,3,5,4,4,4,3,5,4,4,3,4,5]},
+  {name:"Eagle Hills Golf Course",loc:"Omaha, NE",par:71,holes:[4,4,3,5,4,4,5,3,4,4,3,4,5,4,4,3,4,4]},
+  {name:"Wilderness Ridge Golf Club",loc:"Lincoln, NE",par:72,holes:[4,4,3,5,4,4,3,5,4,4,4,3,5,4,4,3,4,5]},
+  {name:"Champions Run",loc:"Omaha, NE",par:72,holes:[4,5,3,4,4,4,5,3,4,4,4,3,5,4,4,3,4,5]},
+  {name:"Indian Creek Golf Course",loc:"Elkhorn, NE",par:72,holes:[4,4,3,5,4,4,5,3,4,4,3,4,5,4,4,3,4,5]},
+];
+
+let currentUser = null;
+let currentProfile = null;
+let selectedCourse = null;
+let scores = Array(18).fill(null);
+let teeboxesTapped = [];
+let currentLbTab = 'courses';
+let passportOpen = false;
+
+// ── AUTH ──────────────────────────────────────────────
+function setAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup')));
+  document.getElementById('login-form').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab==='signup' ? 'block' : 'none';
+  document.getElementById('auth-error').textContent = '';
+}
+
+async function signIn() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return setError('Please fill in all fields');
+  setBtnLoading('login-btn', true);
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  setBtnLoading('login-btn', false);
+  if (error) return setError(error.message);
+}
+
+async function signUp() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const invite = document.getElementById('signup-invite').value.trim().toUpperCase();
+  if (!name || !email || !password || !invite) return setError('Please fill in all fields');
+  if (!VALID_INVITE_CODES.includes(invite)) return setError('Invalid invite code');
+  if (password.length < 6) return setError('Password must be at least 6 characters');
+  setBtnLoading('signup-btn', true);
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name, invite_code: invite } } });
+  setBtnLoading('signup-btn', false);
+  if (error) return setError(error.message);
+  if (data.user) {
+    await sb.from('profiles').upsert({ id: data.user.id, full_name: name, email, invite_code: invite, courses_played: 0, rounds_logged: 0, total_shots: 0 });
+    showToast('Welcome to Pin.! 🏌️');
+  }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+function setError(msg) { document.getElementById('auth-error').textContent = msg; }
+function setBtnLoading(id, loading) {
+  const btn = document.getElementById(id);
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Loading...' : (id==='login-btn' ? 'Sign in' : 'Request access');
+}
+
+// ── INIT ─────────────────────────────────────────────
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    currentUser = session.user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    await loadProfile();
+    await loadFeed();
+  } else {
+    currentUser = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+});
+
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (data) {
+    currentProfile = data;
+    const initials = (data.full_name || 'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('prof-av').textContent = initials;
+    document.getElementById('prof-name').textContent = data.full_name || 'Golfer';
+    document.getElementById('prof-hcap').textContent = data.handicap ? `Handicap: ${data.handicap}` : 'Handicap not set';
+    document.getElementById('prof-invite').textContent = `Invite code used: ${data.invite_code || '—'}`;
+    document.getElementById('ps-courses').textContent = data.courses_played || 0;
+    document.getElementById('ps-rounds').textContent = data.rounds_logged || 0;
+    document.getElementById('ps-shots').textContent = (data.total_shots || 0).toLocaleString();
+    document.getElementById('ps-avg').textContent = data.scoring_avg ? data.scoring_avg.toFixed(1) : '—';
+    document.getElementById('pp-courses').textContent = data.courses_played || 0;
+    document.getElementById('pp-shots').textContent = (data.total_shots || 0).toLocaleString();
+    document.getElementById('pp-states').textContent = `${data.states_played || 0} states`;
+    renderBadges(data);
+  }
+}
+
+function renderBadges(profile) {
+  const shelf = document.getElementById('badge-shelf');
+  const badges = [];
+  if ((profile.rounds_logged||0) >= 1) badges.push({label:'First round',cls:''});
+  if ((profile.courses_played||0) >= 5) badges.push({label:'5 courses',cls:''});
+  if ((profile.courses_played||0) >= 10) badges.push({label:'10 courses',cls:'gold'});
+  if ((profile.total_shots||0) >= 1000) badges.push({label:'1,000 shots',cls:'gold'});
+  if (!badges.length) badges.push({label:'Getting started',cls:''});
+  shelf.innerHTML = badges.map(b=>`<div class="bdg ${b.cls}">${b.label}</div>`).join('');
+}
+
+// ── FEED ─────────────────────────────────────────────
+async function loadFeed() {
+  document.getElementById('feed-list').innerHTML = '<div class="loader"><div class="spin"></div>Loading feed...</div>';
+  const { data, error } = await sb.from('posts')
+    .select('*, profiles(full_name), rounds(course_name, course_loc, total_score, score_vs_par, scorecard)')
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error || !data?.length) {
+    document.getElementById('feed-list').innerHTML = '<div class="empty">No posts yet — log your first round!</div>';
+    return;
+  }
+  document.getElementById('feed-list').innerHTML = data.map(renderPost).join('');
+}
+
+function renderPost(post) {
+  const round = post.rounds;
+  const name = post.profiles?.full_name || 'Golfer';
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const vs = round?.score_vs_par ?? 0;
+  const vsStr = vs===0?'E':vs>0?`+${vs}`:`${vs}`;
+  const total = round?.total_score || '—';
+  const scorecard = round?.scorecard || [];
+  const last5 = scorecard.slice(-5);
+  const PARS = [4,5,4,4,3,5,3,4,4,4,4,3,5,4,5,3,4,5];
+  const strip = last5.map((sc,i) => {
+    const holeIdx = scorecard.length - 5 + i;
+    const par = PARS[holeIdx] || 4;
+    let cls = 'def';
+    if(sc<=par-2)cls='eag'; else if(sc===par-1)cls='bir'; else if(sc===par+1)cls='bog';
+    return `<div class="hc ${cls}"><div class="hn">H${holeIdx+1}</div><div class="hs">${sc}</div></div>`;
+  }).join('') + `<div class="hc def"><div class="hn">TOT</div><div class="hs">${total}</div></div>`;
+  const isPB = post.is_personal_best;
+  return `<div class="card" style="${isPB?'border-color:var(--navy);':''}">
+    <div class="post-header">
+      <div class="av">${initials}</div>
+      <div class="post-meta">
+        <div class="post-user">${name}${post.user_id===currentUser?.id?'<span style="font-size:9px;background:var(--bg4);color:var(--green);padding:2px 6px;border-radius:10px;margin-left:6px;">You</span>':''}</div>
+        <div class="post-course">${round?.course_name||'Unknown course'} · ${round?.course_loc||''}</div>
+      </div>
+      <div class="score-chip" style="${isPB?'background:var(--navy);border-color:#2a3488;':''}">
+        <div class="num" style="${isPB?'color:var(--gold);':''}">${vsStr}</div>
+        <div class="lbl" style="${isPB?'color:#8899cc;':''}">${total}</div>
+      </div>
+    </div>
+    ${isPB?`<div style="background:var(--navy);padding:7px 13px;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.3 2.8 3 .4-2.2 2.1.5 3L7 8l-2.6 1.3.5-3L2.7 4.2l3-.4z" fill="var(--gold)"/></svg><span style="font-size:11px;font-weight:500;color:#fff;">New personal best!</span></div>`:''}
+    <div class="scorestrip">${strip}</div>
+    ${post.caption?`<div class="post-cap">${post.caption}</div>`:''}
+    <div class="post-actions">
+      <button class="act-btn" onclick="this.classList.toggle('pinned')">
+        <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.1"/><path d="M4.5 7l1.8 1.8 3.5-3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+        Want to play
+      </button>
+      <span style="font-size:10px;color:var(--muted);margin-left:auto;">${timeAgo(post.created_at)}</span>
+    </div>
+  </div>`;
+}
+
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+// ── LOG ROUND ─────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const nb = document.getElementById('nav-'+name);
+  if(nb) nb.classList.add('active');
+  if(name==='leaderboard'){loadLeaderboard();renderPassport();}
+  if(name==='log') resetLog();
+  if(name==='profile') loadProfile();
+  if(name==='feed') loadFeed();
+}
+function goFeed(){showScreen('feed');}
+
+function resetLog() {
+  selectedCourse=null; scores=Array(18).fill(null); teeboxesTapped=[];
+  document.getElementById('course-search').value='';
+  document.getElementById('course-results').innerHTML='';
+  document.getElementById('selected-course').style.display='none';
+  document.getElementById('course-history-card').style.display='none';
+  document.getElementById('step0-next').disabled=true;
+  document.getElementById('log-main').style.display='flex';
+  document.getElementById('log-main').style.flexDirection='column';
+  document.getElementById('post-success').classList.remove('show');
+  document.getElementById('caption-input').value='';
+  showStep(0); buildScoreGrid(); buildTeeGrid();
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step-screen').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.step-dot').forEach((d,i)=>d.classList.toggle('active',i<=n));
+  document.getElementById('step-label').textContent=`Step ${n+1} of 3`;
+}
+function nextStep(n){showStep(n); if(n===2)buildTeeGrid();}
+
+function searchCourses(val) {
+  const res=document.getElementById('course-results');
+  if(!val||val.length<2){res.innerHTML='';return;}
+  const m=COURSES.filter(c=>c.name.toLowerCase().includes(val.toLowerCase())||c.loc.toLowerCase().includes(val.toLowerCase())).slice(0,5);
+  res.innerHTML=m.map(c=>`<div class="course-result" onclick='selectCourse(${JSON.stringify(c).replace(/'/g,"&apos;")})'><div class="cr-name">${c.name}</div><div class="cr-loc">${c.loc} · Par ${c.par}</div></div>`).join('');
+}
+
+async function selectCourse(c) {
+  selectedCourse=c;
+  document.getElementById('course-search').value=c.name;
+  document.getElementById('course-results').innerHTML='';
+  document.getElementById('sc-name').textContent=c.name;
+  document.getElementById('sc-loc').textContent=c.loc+' · Par '+c.par;
+  document.getElementById('selected-course').style.display='block';
+  document.getElementById('step0-next').disabled=false;
+  buildScoreGrid();
+  await showCourseHistory(c);
+}
+
+async function showCourseHistory(course) {
+  const card=document.getElementById('course-history-card');
+  if(!currentUser){card.style.display='none';return;}
+  const {data}=await sb.from('rounds').select('total_score').eq('user_id',currentUser.id).eq('course_name',course.name).order('total_score',{ascending:true});
+  if(!data||!data.length){card.style.display='none';return;}
+  const best=data[0].total_score;
+  const visits=data.length;
+  const ranks=[{min:1,label:'Visitor'},{min:3,label:'Regular'},{min:5,label:'Member'},{min:10,label:'Club Champion'}];
+  let rank=ranks[0];
+  for(const r of ranks){if(visits>=r.min)rank=r;}
+  document.getElementById('ch-best').textContent=best;
+  document.getElementById('ch-visits').textContent=visits+'x';
+  document.getElementById('ch-status').textContent=rank.label;
+  card.style.display='block';
+}
+
+function buildScoreGrid() {
+  const grid=document.getElementById('score-grid');
+  const pars=selectedCourse?.holes||Array(18).fill(4);
+  grid.innerHTML='';
+  for(let i=0;i<18;i++){
+    const par=pars[i];
+    const sc=scores[i]!==null?scores[i]:par;
+    const cell=document.createElement('div');
+    cell.className='hole-cell '+holeClass(sc,par);
+    cell.id='hole-'+i;
+    cell.innerHTML=`<div class="hl">H${i+1}</div><div class="hv">${sc}</div>`;
+    cell.onclick=()=>cycleScore(i);
+    grid.appendChild(cell);
+  }
+  updateTotal();
+}
+
+function holeClass(sc,par){
+  if(sc<=par-2)return 'eagle';
+  if(sc===par-1)return 'birdie';
+  if(sc===par)return '';
+  if(sc===par+1)return 'bogey';
+  return 'double';
+}
+
+function cycleScore(i){
+  const par=(selectedCourse?.holes||Array(18).fill(4))[i];
+  if(scores[i]===null)scores[i]=par;
+  scores[i]=scores[i]>=par+3?par-2:scores[i]+1;
+  const cell=document.getElementById('hole-'+i);
+  cell.className='hole-cell '+holeClass(scores[i],par);
+  cell.querySelector('.hv').textContent=scores[i];
+  updateTotal();
+}
+
+function updateTotal(){
+  const pars=selectedCourse?.holes||Array(18).fill(4);
+  const par=selectedCourse?.par||72;
+  const total=scores.reduce((s,v,i)=>s+(v!==null?v:pars[i]),0);
+  const vs=total-par;
+  document.getElementById('total-display').textContent=total;
+  document.getElementById('vs-display').textContent=vs===0?'E (par)':vs>0?`+${vs}`:`${vs}`;
+}
+
+function buildTeeGrid(){
+  const grid=document.getElementById('tee-grid');
+  if(!grid)return;
+  teeboxesTapped=[];
+  grid.innerHTML='';
+  for(let i=1;i<=18;i++){
+    const cell=document.createElement('div');
+    cell.className='tee-cell';
+    cell.id='tee-'+i;
+    cell.textContent=i;
+    cell.onclick=()=>{
+      const idx=teeboxesTapped.indexOf(i);
+      if(idx>=0){teeboxesTapped.splice(idx,1);cell.classList.remove('done');}
+      else{teeboxesTapped.push(i);cell.classList.add('done');}
+      document.getElementById('tee-count-badge').textContent=teeboxesTapped.length+' / 18';
+    };
+    grid.appendChild(cell);
+  }
+  document.getElementById('tee-count-badge').textContent='0 / 18';
+}
+
+async function submitRound(){
+  if(!currentUser||!selectedCourse)return;
+  const btn=document.getElementById('post-btn');
+  btn.disabled=true; btn.textContent='Posting...';
+  const pars=selectedCourse.holes||Array(18).fill(4);
+  const par=selectedCourse.par||72;
+  const scorecard=scores.map((v,i)=>v!==null?v:pars[i]);
+  const total=scorecard.reduce((s,v)=>s+v,0);
+  const vs=total-par;
+  const birdies=scorecard.filter((v,i)=>v<pars[i]).length;
+  const caption=document.getElementById('caption-input').value.trim();
+
+  // ensure profile exists first
+  const {data:existingProf}=await sb.from('profiles').select('id').eq('id',currentUser.id).single();
+  if(!existingProf){
+    const meta=currentUser.user_metadata||{};
+    await sb.from('profiles').upsert({
+      id:currentUser.id,
+      full_name:meta.full_name||currentUser.email?.split('@')[0]||'Golfer',
+      email:currentUser.email,
+      invite_code:meta.invite_code||'PINDEMO',
+      rounds_logged:0, courses_played:0, total_shots:0,
+      courses_list:[], all_scores:[]
+    });
+  }
+
+  // check personal best
+  const {data:prevRounds}=await sb.from('rounds').select('total_score').eq('user_id',currentUser.id).eq('course_name',selectedCourse.name).order('total_score',{ascending:true});
+  const isPB = !prevRounds?.length || total < prevRounds[0].total_score;
+
+  // insert round
+  const {data:round,error:rErr}=await sb.from('rounds').insert({
+    user_id:currentUser.id, course_name:selectedCourse.name, course_loc:selectedCourse.loc,
+    total_score:total, score_vs_par:vs, par:par, scorecard,
+    teeboxes_captured:teeboxesTapped, birdies
+  }).select().single();
+  if(rErr){
+    console.error('Round error:', rErr);
+    showToast('Error: '+rErr.message);
+    btn.disabled=false; btn.textContent='Post round';
+    return;
+  }
+
+  // insert post
+  await sb.from('posts').insert({
+    user_id:currentUser.id, round_id:round.id,
+    caption: caption||null, is_personal_best:isPB
+  });
+
+  // update profile stats
+  const {data:prof}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  const newRounds=(prof?.rounds_logged||0)+1;
+  const newShots=(prof?.total_shots||0)+total;
+  const allScores=(prof?.all_scores||[]);
+  allScores.push(total);
+  const avg=allScores.reduce((s,v)=>s+v,0)/allScores.length;
+  // track unique courses
+  const coursesSet=new Set(prof?.courses_list||[]);
+  coursesSet.add(selectedCourse.name);
+  await sb.from('profiles').update({
+    rounds_logged:newRounds, total_shots:newShots,
+    courses_played:coursesSet.size, courses_list:[...coursesSet],
+    scoring_avg:parseFloat(avg.toFixed(1)), all_scores:allScores
+  }).eq('id',currentUser.id);
+
+  const vsStr=vs===0?'Even (par)':vs>0?`+${vs}`:`${vs}`;
+  document.getElementById('round-summary').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:6px;">${selectedCourse.name}</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">${selectedCourse.loc}</div>
+    <div style="display:flex;gap:16px;margin-bottom:${isPB?'10px':'0'};">
+      <div><div style="font-size:22px;font-weight:500;color:var(--green);">${total}</div><div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">Score</div></div>
+      <div><div style="font-size:22px;font-weight:500;color:var(--green);">${vsStr}</div><div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">vs par</div></div>
+      <div><div style="font-size:22px;font-weight:500;color:var(--green);">${birdies}</div><div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">Birdies</div></div>
+    </div>
+    ${isPB?`<div style="background:var(--navy);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.3 2.8 3 .4-2.2 2.1.5 3L7 8l-2.6 1.3.5-3L2.7 4.2l3-.4z" fill="var(--gold)"/></svg><span style="font-size:12px;font-weight:500;color:#fff;">${prevRounds?.length?'New personal best!':'First time here — score to beat next visit!'}</span></div>`:''}
+    ${teeboxesTapped.length>0?`<div style="margin-top:8px;font-size:11px;color:var(--dim);">${teeboxesTapped.length} tee box${teeboxesTapped.length>1?'es':''} captured${teeboxesTapped.length>=18?' · Course Photographer badge earned!':''}</div>`:''}
+  `;
+
+  btn.disabled=false; btn.textContent='Post round';
+  document.getElementById('log-main').style.display='none';
+  document.getElementById('post-success').classList.add('show');
+  showToast(isPB?'New personal best! 🏆':'Round posted!');
+}
+
+// ── LEADERBOARD ───────────────────────────────────────
+async function loadLeaderboard() {
+  document.getElementById('lb-list').innerHTML='<div class="loader"><div class="spin"></div>Loading...</div>';
+  const {data}=await sb.from('profiles').select('full_name,courses_played,rounds_logged,scoring_avg,total_shots').order(lbField(currentLbTab),{ascending:currentLbTab==='avg'}).limit(10);
+  renderLb(data||[]);
+  document.getElementById('lb-region').textContent='All members · All time';
+}
+
+function lbField(tab){return tab==='courses'?'courses_played':tab==='rounds'?'rounds_logged':'scoring_avg';}
+
+function setLbTab(el,tab){
+  document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentLbTab=tab;
+  loadLeaderboard();
+}
+
+function renderLb(data){
+  const medals=['#c49a1a','#888','#c47d3a'];
+  const field=currentLbTab==='courses'?'courses_played':currentLbTab==='rounds'?'rounds_logged':'scoring_avg';
+  const unit=currentLbTab==='courses'?'courses':currentLbTab==='rounds'?'rounds':'avg';
+  const myName=currentProfile?.full_name;
+  if(!data.length){document.getElementById('lb-list').innerHTML='<div class="empty">No data yet — log some rounds!</div>';return;}
+  document.getElementById('lb-list').innerHTML=data.map((d,i)=>{
+    const isYou=d.full_name===myName;
+    const val=d[field]!=null?(field==='scoring_avg'?parseFloat(d[field]).toFixed(1):d[field]):0;
+    return `<div class="lb-row${isYou?' you':''}">
+      <div class="lb-rank" style="color:${i<3?medals[i]:'var(--green)'}">${i+1}</div>
+      <div class="av" style="width:34px;height:34px;font-size:12px;">${(d.full_name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div class="lb-info">
+        <div class="lb-name">${d.full_name||'Golfer'}${isYou?' (you)':''}</div>
+        <div class="lb-detail">${d.rounds_logged||0} rounds logged</div>
+      </div>
+      <div class="lb-stat"><div class="n">${val||'—'}</div><div class="l">${unit}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── PASSPORT ─────────────────────────────────────────
+const STATES=[
+  {s:'NE',hm:true},{s:'CA'},{s:'FL'},{s:'TX'},{s:'SC'},{s:'GA'},
+  {s:'AZ'},{s:'CO'},{s:'NY'},{s:'NC'},{s:'VA'},{s:'MN'},
+  {s:'OR'},{s:'WA'},{s:'UT'},{s:'MI'},{s:'ID'},{s:'WY'},
+  {s:'MT'},{s:'NV'},{s:'OH'},{s:'IL'},{s:'WI'},{s:'IA'}
+];
+
+async function renderPassport(){
+  const {data}=await sb.from('rounds').select('course_loc').eq('user_id',currentUser.id);
+  const playedStates=new Set((data||[]).map(r=>(r.course_loc||'').split(',')[1]?.trim()));
+  const grid=document.getElementById('passport-grid');
+  grid.innerHTML=STATES.map(s=>{
+    const cls=s.hm?'st hm':playedStates.has(s.s)?'st pl':'st';
+    return `<div class="${cls}">${s.s}</div>`;
+  }).join('');
+  const count=STATES.filter(s=>playedStates.has(s.s)||s.hm).length;
+  document.getElementById('pp-count').innerHTML=`<strong style="color:#fff;">${count}</strong> of 50 states`;
+  document.getElementById('pp-states').textContent=count+' states';
+}
+
+function togglePassport(){
+  passportOpen=!passportOpen;
+  document.getElementById('passport-expanded').style.display=passportOpen?'block':'none';
+  document.getElementById('pp-chevron').style.transform=passportOpen?'rotate(90deg)':'';
+  if(passportOpen)renderPassport();
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT CHECK ────────────────────────────────────────
+sb.auth.getSession().then(({data:{session}})=>{
+  if(!session){
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+  }
+});
+</script>
+</body>
+</html>
